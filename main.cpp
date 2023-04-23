@@ -72,12 +72,13 @@ int main() {
     world.add(make_shared<sphere>(point3(0, 0, -1), 0.5, material_center));
     world.add(make_shared<sphere>(point3(-1, 0, -1), 0.5, material_left));
     world.add(make_shared<sphere>(point3(1, 0, -1), 0.5, material_right));
-
-    // Hollow sphere
-//    world.add(make_shared<sphere>(point3(-1.0,    0.0, -1.0),  -0.4, material_left));
+    // Hollow sphere, making left sphere functions like a bubble.
+    world.add(make_shared<sphere>(point3(-1.0, 0.0, -1.0), -0.4, material_left));
 
     // Camera
-    camera cam;
+    camera cam(point3(-2, 2, 1),
+               point3(0, 0, -1),
+               vec3(0, 1, 0), 18.0, aspect_ratio);
 
     // ppm file header
     fout << "P3\n" << image_width << ' ' << image_height << "\n255\n";

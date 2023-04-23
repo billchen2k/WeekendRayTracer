@@ -10,16 +10,32 @@
 class camera {
 
 public:
-    camera() {
-        float aspect_ratio = 16.0 / 9.0;
-        float viewport_height = 2.0;
-        float viewport_width = aspect_ratio * viewport_height;
-        float focal_length = 1.0;
 
-        origin = point3(0, 0, 0);
-        horizontal = vec3(viewport_width, 0.0, 0.0);
-        vertical = vec3(0.0, viewport_height, 0.0);
-        lower_left_corner = origin - horizontal / 2 - vertical / 2 - vec3(0, 0, focal_length);
+    /**
+     *
+     * @param lookfrom Look from point
+     * @param lookat Look at point
+     * @param vup View up direction of camera
+     * @param vfov  Vertical field-of view in degrees.
+     * @param aspect_ratio Width / Height
+     */
+    camera(point3 lookfrom,
+           point3 lookat,
+           vec3 vup,
+           float vfov, float aspect_ratio) {
+        auto theta = deg_to_rad(vfov);
+        auto h = tan(theta / 2.0);
+        float viewport_height = 2.0 * h;
+        float viewport_width = aspect_ratio * viewport_height;
+
+        auto w = unit_vec(lookfrom - lookat);
+        auto u = unit_vec(cross(vup, w));
+        auto v = cross(w, u);
+
+        origin = lookfrom;
+        horizontal = viewport_width * u;
+        vertical = viewport_height * v;
+        lower_left_corner = origin - horizontal / 2 - vertical / 2 - w;
     }
 
     /**
