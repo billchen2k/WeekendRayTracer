@@ -7,6 +7,7 @@
 
 #include <cmath>
 #include <iostream>
+#include "rtweekend.h"
 
 using std::sqrt;
 
@@ -27,8 +28,6 @@ public:
     float g() const { return e[1]; }
 
     float b() const { return e[2]; }
-
-
 
     vec3 operator-() const { return vec3(-e[0], -e[1], -e[2]); }
 
@@ -66,6 +65,19 @@ public:
         return sqrt(length_squared());
     }
 
+    inline static vec3 rand() {
+        return vec3(rand_float(), rand_float(), rand_float());
+    }
+
+    inline static vec3 rand(float min, float max) {
+        return vec3(rand_float(min, max), rand_float(min, max), rand_float(min, max));
+    }
+
+    bool near_zero() const {
+        const auto s = 1e-5;
+        return (fabs(e[0] < s) && fabs(e[1]) < s && (fabs(e[2])) < s);
+    }
+
 private:
     float e[3];
 };
@@ -80,25 +92,35 @@ inline std::ostream &operator<<(std::ostream &out, const vec3 &v) {
 }
 
 inline vec3 operator+(const vec3 &u, const vec3 &v) {
-    return vec3(u[0], u[1], u[2]);
+    return vec3(u[0] + v[0], u[1] + v[1], u[2] + v[2]);
+}
+
+inline vec3 operator-(const vec3 &u, const vec3 &v) {
+    return vec3(u[0] - v[0], u[1] - v[1], u[2] - v[2]);
 }
 
 inline vec3 operator*(const vec3 &u, const vec3 &v) {
-    return vec3(u[0], u[1], u[2]);
+    return vec3(u[0] * v[0], u[1] * v[1], u[2] * v[2]);
 }
 
-inline vec3 operator*(double t, const vec3 &v) {
+inline vec3 operator*(float t, const vec3 &v) {
     return vec3(t * v[0], t * v[1], t * v[2]);
 }
 
-inline vec3 operator/(vec3 v, double t) {
+inline vec3 operator/(vec3 v, float t) {
     return (1 / t) * v;
 }
 
-inline double dot(const vec3 &u, const vec3 &v) {
+inline float dot(const vec3 &u, const vec3 &v) {
     return u[0] * v[0] + u[1] * v[1] + u[2] * v[2];
 }
 
+/**
+ * Cross product returns a vector that is perpendicular to u and v.
+ * @param u
+ * @param v
+ * @return vec3
+ */
 inline vec3 cross(const vec3 &u, const vec3 &v) {
     return vec3(u[1] * v[2] - u[2] * v[1],
                 u[2] * v[0] - u[0] * v[2],
@@ -109,5 +131,38 @@ inline vec3 unit_vec(vec3 v) {
     return v / v.length();
 }
 
+/**
+ *
+ * @return A random vec3 inside the unit sphere (squared length <= 1)
+ */
+vec3 random_in_unit_sphere() {
+    while (true) {
+        auto p = vec3::rand(-1, 1);
+        if (p.length_squared() >= 1) continue;
+        return p;
+    }
+}
 
+vec3 random_unit_vec() {
+    return unit_vec(random_in_unit_sphere());
+}
+
+vec3 random_in_hemisphere(const vec3& norm) {
+    vec3 in_unit_sphere = random_in_unit_sphere();
+    if (dot(in_unit_sphere, norm) > 0.0) {
+        return in_unit_sphere;
+    } else {
+        return -in_unit_sphere;
+    }
+}
+
+/**
+ *
+ * @param v Incoming ray
+ * @param n Unit vector of surface norm
+ * @return The reflected vector B.
+ */
+vec3 reflect(const vec3& v, const vec3& n) {
+    return v - 2 * dot(v, n) * n;
+}
 #endif //RAYTRACER_VEC3_H
