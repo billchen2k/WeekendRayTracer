@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <chrono>
 
 #include "rtweekend.h"
 #include "color.h"
@@ -62,21 +63,25 @@ int main() {
     hittable_list world;
 
     auto material_ground = make_shared<lambertian>(color(0.8, 0.8, 0.8));
-    auto material_center = make_shared<lambertian>(color(0.7, 0.3, 0.3));
-    auto material_left = make_shared<metal>(color(0.8, 0.8, 0.8));
-    auto material_right = make_shared<metal>(color(0.8, 0.6, 0.2));
+    auto material_center = make_shared<lambertian>(color(0.1, 0.2, 0.5));
+    auto material_left = make_shared<dielectric>(1.5);
+    auto material_right = make_shared<metal>(color(0.8, 0.6, 0.2), 0.0);
+
 
     world.add(make_shared<sphere>(point3(0, -100.5, -1), 100, material_ground));
     world.add(make_shared<sphere>(point3(0, 0, -1), 0.5, material_center));
     world.add(make_shared<sphere>(point3(-1, 0, -1), 0.5, material_left));
     world.add(make_shared<sphere>(point3(1, 0, -1), 0.5, material_right));
 
+    // Hollow sphere
+//    world.add(make_shared<sphere>(point3(-1.0,    0.0, -1.0),  -0.4, material_left));
+
     // Camera
     camera cam;
 
     // ppm file header
     fout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
-
+    auto start_time = std::chrono::steady_clock::now();
     for (int j = image_height - 1; j >= 0; --j) {
         std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
         for (int i = 0; i < image_width; ++i) {
@@ -90,8 +95,9 @@ int main() {
             write_color(fout, pixel_color, samples_per_pixel);
         }
     }
-
+    auto end_time = std::chrono::steady_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
     fout.close();
-    std::cerr << "\nDone.\n";
+    std::cerr << "\nDone in " << double(duration) / 1000 << "s.\n";
     return 0;
 }

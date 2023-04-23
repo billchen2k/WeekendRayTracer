@@ -21,6 +21,9 @@ inline float deg_to_rad(float degrees) {
     return degrees * pi / 180;
 }
 
+/**
+ * @return A random float number between 0.0 - 1.0
+ */
 inline float rand_float() {
     static std::uniform_real_distribution<float> dist(0.0, 1.0);
     static std::mt19937 generator;

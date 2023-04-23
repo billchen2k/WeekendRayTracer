@@ -36,8 +36,9 @@ bool sphere::hit(const ray &r, float t_min, float t_max, hit_record &rec) const 
     auto sqrtd = sqrt(discriminator);
     auto root = (-half_b - sqrtd) / a;
     if (root < t_min || t_max < root) {
-        root = (-half_b + sqrtd) / 2;
-        if (root < t_min || root > t_min) {
+        /// There is a culprit: 2 -> a; root > t_min -> root > t_max
+        root = (-half_b + sqrtd) / a;
+        if (root < t_min || root > t_max) {
             return false;
         }
     }

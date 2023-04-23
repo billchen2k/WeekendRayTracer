@@ -5,7 +5,6 @@
 #ifndef RAYTRACER_HITTABLE_H
 #define RAYTRACER_HITTABLE_H
 
-#include "ray.h"
 #include "rtweekend.h"
 
 class material;
