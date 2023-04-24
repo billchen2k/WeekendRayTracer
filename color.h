@@ -9,14 +9,14 @@
 
 #include <iostream>
 
-void write_color(std::ostream &out, color pixel_color, int samples_per_pixel) {
+void write_color(std::ostream &out, color pixel_color) {
 
     auto r = pixel_color.r();
     auto g = pixel_color.g();
     auto b = pixel_color.b();
 
     // Gamma correction for gamma=2.0
-    float scale = 1.0 / samples_per_pixel;
+    float scale = 1.0;
     r = sqrt(scale * r);
     g = sqrt(scale * g);
     b = sqrt(scale * b);

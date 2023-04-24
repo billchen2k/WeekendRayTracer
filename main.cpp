@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <chrono>
+#include <omp.h>
 
 #include "rtweekend.h"
 #include "color.h"
@@ -76,13 +77,14 @@ hittable_list world_scene() {
 }
 
 int main() {
-    std::ofstream fout("out/image.ppm");
-
     const float aspect_ratio = 16.0 / 9.0;
-    const int image_width = 120;
+    const int image_width = 1200;
     const int image_height = static_cast<int>(image_width / aspect_ratio);
     const int samples_per_pixel = 500;    // Used for antialiasing
     const int max_depth = 50;
+
+    std::ofstream fout("out/image.ppm");
+    auto image = std::vector<std::vector<color>>(image_height, std::vector<color>(image_width));
 
     // World
     hittable_list world = world_scene();
@@ -111,14 +113,22 @@ int main() {
 
     camera cam(lookfrom, lookat, vup, 20.0, aspect_ratio, aperture, dist_to_focus);
 
-    // ppm file header
-    fout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
     auto start_time = std::chrono::steady_clock::now();
+
+    int pixels_done = 0;
+    int total_pixels = image_height * image_width;
+
+#pragma omp parallel // NOLINT
+    {
+        int thread_count = omp_get_num_threads();
+        int thread_num = omp_get_thread_num();
+        if (thread_num == 0) {
+            std::cout << "Running raytracing with " << thread_count << " threads." << std::endl;
+        }
+    };
+#pragma omp parallel for schedule(dynamic, 1) collapse(2) // NOLINT
     for (int j = image_height - 1; j >= 0; --j) {
-        int pixelsDone = (image_height - j) * image_width;
-        float pps = pixelsDone / (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time).count() / 1000.0);
-        float eta = (image_height * image_width - pixelsDone) / pps;
-        std::cerr << "\rScanlines remaining: " << j << ", Pixels/s: " << pps << ", ETA: " << eta << "s" << std::flush;
+//        std::cerr << "\rScanlines remaining: " << j << ", Pixels/s: " << pps << ", ETA: " << eta << "s" << std::flush;
         for (int i = 0; i < image_width; ++i) {
             color pixel_color(0, 0, 0);
             for (int s = 0; s < samples_per_pixel; ++s) {
@@ -127,12 +137,39 @@ int main() {
                 ray r = cam.get_ray(u, v);
                 pixel_color += ray_color(r, world, max_depth);
             }
-            write_color(fout, pixel_color, samples_per_pixel);
+            image[j][i] = pixel_color / samples_per_pixel;
+
+#pragma omp critical
+            {
+                pixels_done++;
+                if (pixels_done % 50 == 0) {
+                    float pps = pixels_done / (std::chrono::duration_cast<std::chrono::milliseconds>(
+                            std::chrono::steady_clock::now() - start_time).count() / 1000.0);
+                    float eta = (total_pixels - pixels_done) / pps;
+                    float percentage = pixels_done / float(total_pixels) * 100;
+                    std::cerr << "\rPixels done: " << pixels_done << ", " << percentage << "%, Pixels/s: " << pps
+                              << ", ETA: " << eta << "s"
+                              << std::flush;
+                }
+
+            }
         }
     }
+
     auto end_time = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+
+    std::cout << "\nWriting image file...";
+    // ppm file header
+    fout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+    for (int j = image_height - 1; j >= 0; --j) {
+        for (int i = 0; i < image_width; ++i) {
+            write_color(fout, image[j][i]);
+        }
+    }
+
     fout.close();
+
     std::cerr << "\nDone in " << double(duration) / 1000 << "s.\n";
     return 0;
 }
