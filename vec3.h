@@ -155,6 +155,14 @@ vec3 random_in_hemisphere(const vec3 &norm) {
     }
 }
 
+vec3 random_in_unit_disk() {
+    while (true) {
+        auto p = vec3(rand_float(-1, 1), rand_float(-1, 1), 0);
+        if (p.length_squared() >= 1) continue;
+        return p;
+    }
+}
+
 /**
  *
  * @param v Incoming ray

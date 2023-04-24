@@ -21,7 +21,11 @@ public:
     lambertian(const color &a) : albedo(a) {}
 
     virtual bool scatter(const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered) const override {
-        auto scatter_direction = random_unit_vec() + rec.norm;
+        //  Three diffuse methods:
+        //  + random_in_unit_sphere()
+        //  + random_unit_vec()
+        //  + random_in_unit_sphere(rec.norm)
+        auto scatter_direction = rec.norm + random_unit_vec();
 
         // Cache degenerate scatter direction
         if (scatter_direction.near_zero())
