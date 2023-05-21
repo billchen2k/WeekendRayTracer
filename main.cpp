@@ -10,7 +10,6 @@
 #include "camera.h"
 #include "material.h"
 
-
 color ray_color(const ray &r, const hittable &world, int depth) {
     hit_record rec;
 
@@ -27,7 +26,7 @@ color ray_color(const ray &r, const hittable &world, int depth) {
         return color(0, 0, 0);
     }
 
-    // Rendering the background gradinet.
+    // Rendering the background gradient.
     // y for unit direction: [-1, 1]
     vec3 unit_direction = unit_vec(r.direction());
     auto t = 0.5 * (unit_direction.y() + 1.0);
@@ -125,10 +124,10 @@ int main() {
         if (thread_num == 0) {
             std::cout << "Running raytracing with " << thread_count << " threads." << std::endl;
         }
-    };
+    }
+
 #pragma omp parallel for schedule(dynamic, 1) collapse(2) // NOLINT
     for (int j = image_height - 1; j >= 0; --j) {
-//        std::cerr << "\rScanlines remaining: " << j << ", Pixels/s: " << pps << ", ETA: " << eta << "s" << std::flush;
         for (int i = 0; i < image_width; ++i) {
             color pixel_color(0, 0, 0);
             for (int s = 0; s < samples_per_pixel; ++s) {
@@ -169,7 +168,6 @@ int main() {
     }
 
     fout.close();
-
     std::cerr << "\nDone in " << double(duration) / 1000 << "s.\n";
     return 0;
 }
